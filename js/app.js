@@ -10,20 +10,20 @@ myApp.controller("ResponseController", ['$http', function ($http) {
 
     self.state = "NY";
     self.cities = [];
+    self.orgsList = [];
     //self.numCities = 0;
 
     self.getCities = function (state) {
-        console.log("called: " + state);
         self.state = state || "NY";
 
         $http.get( url, {
             method: "GET",
             params: {path: "/Cities?state=" + self.state},
             responseType: "document"
-        }).success(self.handleResponse);
+        }).success(self.getCitiesCallback);
     };
 
-    self.handleResponse = function (data) {
+    self.getCitiesCallback = function (data) {
         if ($(data).find("error").length !== 0) {
             console.log("AJAX error");
         }
@@ -42,13 +42,46 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         self.cities.push(city);
     };
 
+    self.getOrgs = function() {
+        var state = $("#state");
+        if(!state.val()) {
+            state.val("NY");
+        }
+        $http.get( url, {
+            method: "GET",
+            params: {path: "/Organizations?" + $("#searchForm").serialize()},
+            responseType: "document"
+        }).success(self.getOrgsCallback);
+    };
+
+    self.getOrgsCallback = function (data) {
+        if ($(data).find("error").length !== 0) {
+            console.log("AJAX error");
+        }
+        else {
+            self.orgsList = [];
+            $("row", data).each(function(){
+                self.orgsList.push({
+                    orgId : $("OrganizationID", this).text(),
+                    type : $("type", this).text(),
+                    name : $("Name", this).text(),
+                    city : $("city", this).text(),
+                    county : $("CountyName", this).text(),
+                    state : $("State", this).text(),
+                    zip : $("zip", this).text()
+                });
+            });
+            console.log(self.orgsList);
+        }
+    };
+
     self.getCities();
 
     return self;
-}]);//end controller
+}]);
 
 myApp.utils = (function() {
     var me = {};
 
-    //$("[value='NY']").attr("selected", "selected"); // move to add
+
 }());

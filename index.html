@@ -18,23 +18,32 @@
 </head>
 <body >
 <section ng-controller="ResponseController as resp">
-    <form >
+    <form id="searchForm">
         <div class="row" >
             <div class="medium-3 columns">
                 <label id="state_label">State
-                    <select name="state_input" id="state_input" ng-model="resp.stateSelect" ng-change="resp.getCities(resp.stateSelect)">
+                    <select name="state" id="state" ng-model="resp.stateSelect" ng-change="resp.getCities(resp.stateSelect)">
                         <option value="" selected="selected">NY</option>
                         <option ng-repeat="state in resp.states" value="{{state}}">{{state}}</option>
                     </select>
                 </label>
                 <label>City
-                    <select name="city_input" id="city_input">
-                        <option ng-repeat="city in resp.cities" ng-click= value="{{city}}">{{city}}</option>
+                    <select name="town" id="town" ng-model="resp.citySelect" ng-change="resp.getOrgs()">
+                        <option value="">--Please Select A City--</option>
+                        <option ng-repeat="city in resp.cities" ng-click="" value="{{city}}">{{city}}</option>
                     </select>
                 </label>
+                <!--<label>Organization Name
+                    <input type="text" name="name" id="name" />
+                </label>-->
             </div>
         </div>
     </form>
+    <div id="results_disp">
+        <ul>
+            <li ng-repeat="org in resp.orgsList">{{org.name}}</li>
+        </ul>
+    </div>
 </section>
 
 <script src="js/vendor/jquery.min.js"></script>

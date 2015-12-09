@@ -1,4 +1,4 @@
-//$(document).foundation();
+$(document).foundation();
 var myApp = angular.module('myApp', []);
 
 myApp.controller("ResponseController", ['$http', function ($http) {
@@ -11,6 +11,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     self.state = "NY";
     self.cities = [];
     self.orgsList = [];
+    self.optList = [];
     //self.numCities = 0;
 
     self.getCities = function (state) {
@@ -18,7 +19,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
 
         $http.get( url, {
             method: "GET",
-            params: {path: "/Cities?state=" + self.state},
+            params: {path: "/Cities?state="+ self.state},
             responseType: "document"
         }).success(self.getCitiesCallback);
     };
@@ -60,10 +61,15 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         }
         else {
             self.orgsList = [];
+            self.optList = [];
             $("row", data).each(function(){
+                var type = $("type", this).text();
+                if(self.optList.indexOf(type) === -1) {
+                    self.optList.push(type);
+                }
                 self.orgsList.push({
                     orgId : $("OrganizationID", this).text(),
-                    type : $("type", this).text(),
+                    type : type,
                     name : $("Name", this).text(),
                     city : $("city", this).text(),
                     county : $("CountyName", this).text(),
@@ -71,17 +77,30 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                     zip : $("zip", this).text()
                 });
             });
-            console.log(self.orgsList);
+           $("#adv_search, #results_disp").show();
         }
+    };
+
+    self.getTabs = function (id) {
+        $http.get( url, {
+            method: "GET",
+            params: {path: "/Application/Tabs?orgId=" + id},
+            responseType: "document"
+        }).success(self.getTabsCallback);
+    };
+
+    self.getTabsCallback = function(data) {
+        console.log(data);
     };
 
     self.getCities();
 
-    return self;
+    //return self;
 }]);
 
 myApp.utils = (function() {
     var me = {};
+
 
 
 }());

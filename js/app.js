@@ -14,6 +14,8 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     self.optList = [];
     self.tabs = [];
     self.orgId = "";
+    self.tabInfo = {};
+    self.tab = "";
     //self.numCities = 0;
 
     self.getCities = function (state) {
@@ -88,9 +90,31 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             });
             $(".orgRow").click(function(){
                 $("#tabs_modal").modal();
-
+                $(".nav").navgoco();
                 return false;
             });
+        });
+    };
+
+    self.getTabInfo = function (tab) {
+        self.tab = tab;
+        $http.get(url, {
+            method: "GET",
+            params: {path: "/" + self.orgId + "/" + tab},
+            responseType: "document"
+        }).success(function(data){
+            if(tab === 'General') {
+                self.tabInfo = {
+                    name: $("Name", data).text(),
+                    email: $("email", data).text(),
+                    website: $("website", data).text(),
+                    description: $("description", data).text(),
+                    nummembers: $("nummembers", data).text(),
+                    numcalls: $("numcalls", data).text(),
+                    serviceArea: $("serviceArea", data).text()
+                };
+            }
+
         });
     };
 

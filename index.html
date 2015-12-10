@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/foundation.css" />
     <link rel="stylesheet" href="css/basic.css" /> <!--modal plugin css-->
+    <link rel="stylesheet" href="css/jquery.navgoco.css" /> <!--Navgoco jquery plugin css-->
 
     <style>
         #state_label {
@@ -19,6 +20,12 @@
         }
         #tabs_modal {
             display: none;
+        }
+        .orgRow {
+            cursor: pointer;
+        }
+        .sortable {
+            cursor:pointer;
         }
     </style>
 
@@ -66,14 +73,14 @@
     <div id="results_disp" class="row">
         <table>
             <tr>
-                <th>Type</th>
-                <th>Name</th>
+                <th><em class="sortable" ng-click="sortBy = 'type'; sortRev = !sortRev;">Type</em></th>
+                <th><em class="sortable" ng-click="sortBy = 'name'; sortRev = !sortRev;">Name</em></th>
                 <th>City</th>
                 <th>State</th>
-                <th>Zip</th>
-                <th>County</th>
+                <th><em class="sortable" ng-click="sortBy = 'zip'; sortRev = !sortRev;">Zip</em></th>
+                <th><em class="sortable" ng-click="sortBy = 'county'; sortRev = !sortRev;">County</em></th>
             </tr>
-            <tr ng-repeat="org in resp.orgsList | filter:{name:nameQuery, county:countyQuery, zip:zipQuery, type:orgQuery}"
+            <tr ng-repeat="org in resp.orgsList | filter:{name:nameQuery, county:countyQuery, zip:zipQuery, type:orgQuery} | orderBy: sortBy:sortRev"
                 id="{{org.orgId}}" ng-click="resp.getTabs(org.orgId)" class="orgRow">
 
                     <td>{{org.type}}</td>
@@ -87,12 +94,18 @@
     </div>
         <div id="tabs_modal" >
             <h2 mg-model="orgId">{{resp.orgId}}</h2>
-            <div ng-repeat="tab in resp.tabs">{{tab}}</div>
+            <ul class="nav">
+                <li ng-repeat="tab in resp.tabs"><a href="#" ng-model="tab" ng-click="resp.getTabInfo(tab)">{{tab}}</a>
+
+                </li>
+            </ul>
         </div>
 </section>
 
 <script src="js/vendor/jquery.min.js"></script>
 <script src="js/vendor/jquery.simplemodal-1.4.4.js"></script> <!--jquery modal plugin-->
+<script src="js/vendor/jquery.cookie.min.js" ></script> <!--necessary for navgoco plugin-->
+<script src="js/vendor/jquery.navgoco.min.js" ></script> <!--Navgoco plugin-->
 <!--<script src="js/vendor/what-input.min.js"></script>
 <script src="js/foundation.min.js"></script>-->
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>

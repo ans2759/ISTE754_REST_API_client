@@ -15,7 +15,11 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     self.tabs = [];
     self.orgId = "";
     self.tabInfo = {};
-    self.tab = "";
+    self.tab = "General";
+    self.locInfo = [];
+    self.lat;
+    self.long;
+    self.map;
     //self.numCities = 0;
 
     self.getCities = function (state) {
@@ -78,6 +82,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     };
 
     self.getTabs = function (id) {
+        self.tab = "General";
         self.orgId = id;
         $http.get( url, {
             method: "GET",
@@ -88,34 +93,93 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             $("row", data).each(function() {
                 self.tabs.push($("Tab", this).text());
             });
-            $(".orgRow").click(function(){
-                $("#tabs_modal").modal();
-                $(".nav").navgoco();
-                return false;
+            $("#tabs_modal").modal().load(function(){
+                $("#tabs_modal").easytabs({
+                    defaultTab: "li:first-child"
+                });
             });
+
         });
     };
 
     self.getTabInfo = function (tab) {
+        console.log(tab);
         self.tab = tab;
+        self.tabInfo = {};
         $http.get(url, {
             method: "GET",
             params: {path: "/" + self.orgId + "/" + tab},
             responseType: "document"
         }).success(function(data){
             if(tab === 'General') {
-                self.tabInfo = {
-                    name: $("Name", data).text(),
-                    email: $("email", data).text(),
-                    website: $("website", data).text(),
-                    description: $("description", data).text(),
-                    nummembers: $("nummembers", data).text(),
-                    numcalls: $("numcalls", data).text(),
-                    serviceArea: $("serviceArea", data).text()
-                };
-            }
+                var n = $("name", data).text(),
+                    e = $("email", data).text(),
+                    w = $("website", data).text(),
+                    d = $("description", data).text(),
+                    nm = $("nummembers", data).text(),
+                    nc = $("numcalls", data).text(),
+                    s = $("serviceArea", data).text();
 
+                if(n != "" && n != null && n != 'null')
+                    self.tabInfo.name = n;
+                if(e != "" && e != null && e != 'null')
+                    self.tabInfo.email = e;
+                if(w != "" && w != null && w != 'null')
+                    self.tabInfo.website = w;
+                if(d != "" && d != null && d != 'null')
+                    self.tabInfo.description = d;
+                if(nm != "" && nm != null && nm != 'null')
+                    self.tabInfo.nummembers = nm;
+                if(nc != "" && nc != null && nc != 'null')
+                    self.tabInfo.numcalls = nc;
+                if(s != "" && s != null && s != 'null')
+                    self.tabInfo.servicearea = s;
+            }
+            else if(tab === 'Locations') {
+                self.locInfo = [];
+                var locals = $("location", data);
+                $.each(locals, function(i){
+                    var la = parseFloat($("latitude", this).text()),
+                        lo = parseFloat($("longitude", this).text());
+                    if(i == 0) {
+                        self.setMap(la,lo);
+                    }
+                    self.locInfo.push({
+                        type: $("type", this).text(),
+                        add: $("address1", this).text(),
+                        city: $("city", this).text(),
+                        state: $("state", this).text(),
+                        zip: $("zip", this).text(),
+                        phone: $("phone", this).text(),
+                        tty: $("ttyPhone", this).text(),
+                        fax: $("fax", this).text(),
+                        lat: la,
+                        long: lo,
+                        site: $("siteId", this).text()
+                    });
+                });
+            }
         });
+    };
+
+    self.setMap = function(la, lo, site){
+        self.lat = la;
+        self.long = lo;
+        if(site) {
+            self.lat = self.locInfo[site-1].lat;
+            self.long = self.locInfo[site-1].long;
+        }
+        if((self.lat != "" && self.lat != null && self.lat != 'null') && (self.long != "" && self.long != null && self.long != 'null')) {
+            //console.log(self.map);
+            if(self.map) {
+                self.map.setCenter({lat: self.lat, lng: self.long});
+
+            }
+            self.map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: self.lat, lng: self.long},
+                zoom: 14
+            });
+        }
     };
 
     self.getCities();
@@ -126,6 +190,5 @@ myApp.controller("ResponseController", ['$http', function ($http) {
 myApp.utils = (function() {
     var me = {};
 
-
-
 }());
+

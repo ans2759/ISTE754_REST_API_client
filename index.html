@@ -5,8 +5,8 @@
     <title>ESD Search</title>
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/foundation.css" />
-    <link rel="stylesheet" href="css/basic.css" /> <!--modal plugin css-->
-    <link rel="stylesheet" href="css/jquery.navgoco.css" /> <!--Navgoco jquery plugin css-->
+    <link rel="stylesheet" href="css/jquery.modal.css" /> <!--modal plugin css-->
+    <link rel="stylesheet" href="css/easy-tabs.css" /> <!--jquery tabs css-->
 
     <style>
         #state_label {
@@ -27,11 +27,24 @@
         .sortable {
             cursor:pointer;
         }
+        .modal {
+            position: absolute;
+            width: 35%;
+            left: 25%;
+            top: 25%;
+        }
+        #loc-left {
+            float:left;
+            width:33%;
+        }
+        #map {
+            height:450PX;
+        }
     </style>
 
 </head>
-<body >
-<section ng-controller="ResponseController as resp">
+<body ng-controller="ResponseController as resp">
+<section >
     <div class="row" >
         <div class="medium-3 columns">
             <form id="searchForm">
@@ -92,24 +105,52 @@
             </tr>
         </table>
     </div>
-        <div id="tabs_modal" >
-            <h2 mg-model="orgId">{{resp.orgId}}</h2>
-            <ul class="nav">
-                <li ng-repeat="tab in resp.tabs"><a href="#" ng-model="tab" ng-click="resp.getTabInfo(tab)">{{tab}}</a>
+    <div id="tabs_modal" class="tab-container" >
+        <ul class="etabs">
+            <li ng-repeat="tab in resp.tabs" class="tab"><a href="#tabs-1" ng-click="resp.getTabInfo(tab)">{{tab}}</a></li>
+        </ul>
 
-                </li>
-            </ul>
+        <div id="tabs-1">
+            <div ng-show="resp.tab == 'General'">
+               <!-- <p ng-model="orgName"><bold>Description:</bold> {{resp.tabInfo.description}}</p>-->
+                <table>
+                    <tbody>
+                        <tr ng-repeat="(key, val) in resp.tabInfo"><td><strong>{{key}}: </strong></td><td>{{val}}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div ng-show="resp.tab == 'Locations'">
+                <div id="loc-left">
+                    <label>Choose Location:
+                        <select  ng-model="locQuery" ng-change="resp.setMap(0,0,locQuery)">
+                            <option ng-repeat="loc in resp.locInfo" value="{{loc.site}}">{{loc.type}}</option>
+                        </select>
+                    </label>
+                    <input ng-repeat-start="loc in resp.locInfo" type="hidden" id="hidLat" ng-model="lat" value="{{loc.lat}}" />
+                    <input type="hidden" ng-model="lon" value="{{loc.long}}" id="hidLon"/>
+                    <table ng-repeat-end ng-hide="loc.site != locQuery">
+                        <tbody>
+                            <tr ng-repeat="(key, val) in loc" ng-hide="val == null || val == 'null' || val == ''"><td><strong>{{key}}</strong></td><td>{{val}}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="map"></div>
+            </div>
+
         </div>
+    </div>
 </section>
 
 <script src="js/vendor/jquery.min.js"></script>
-<script src="js/vendor/jquery.simplemodal-1.4.4.js"></script> <!--jquery modal plugin-->
-<script src="js/vendor/jquery.cookie.min.js" ></script> <!--necessary for navgoco plugin-->
-<script src="js/vendor/jquery.navgoco.min.js" ></script> <!--Navgoco plugin-->
+<script src="js/vendor/jquery.modal.min.js"></script> <!--jquery modal plugin-->
+<script src="js/vendor/jquery.easytabs.min.js"></script> <!--jquery tabs plugin-->
 <!--<script src="js/vendor/what-input.min.js"></script>
 <script src="js/foundation.min.js"></script>-->
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <script src="js/app.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWBj2dhI0OPE1jTgK_7vCC1sNDL_F7GIA&"></script>
+
 
 </body>
 </html>

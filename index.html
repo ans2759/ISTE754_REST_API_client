@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/foundation.css" />
     <link rel="stylesheet" href="css/jquery.modal.css" /> <!--modal plugin css-->
     <link rel="stylesheet" href="css/easy-tabs.css" /> <!--jquery tabs css-->
+    <link rel="stylesheet" href="css/jquery.auto-complete.css" /> <!--jquery auto-complete plugin-->
 
     <style>
         #state_label {
@@ -46,7 +47,7 @@
 <body ng-controller="ResponseController as resp">
 <section >
     <div class="row" >
-        <div class="medium-3 columns">
+        <div class="medium-3 columns" id="searcher">
             <form id="searchForm">
             <label id="state_label">State
                 <select name="state" id="state" ng-model="resp.stateSelect" ng-change="resp.getCities(resp.stateSelect)">
@@ -55,12 +56,14 @@
                 </select>
             </label>
             <label>City
-                <select name="town" id="town" ng-model="resp.citySelect" ng-change="resp.getOrgs()">
+                <select name="town" id="town" ng-model="citySelect" >
                     <option value="">--Please Select A City--</option>
                     <option ng-repeat="city in resp.cities" value="{{city}}">{{city}}</option>
                 </select>
             </label>
             </form>
+            <a ng-model="phySearch" id="phySearch" ng-click="resp.getOrgs(true)" class="secondary button" href="#">Search For Physicians</a>
+            <a ng-model="orgSearch" id="orgSearch" ng-click="resp.getOrgs(false)" class="secondary button" href="#">Search For Organizations</a>
         </div>
         <div class="medium-3 columns">
             <form id="adv_search">
@@ -68,15 +71,15 @@
                     <input type="text" name="name" id="name" ng-model="nameQuery"/>
                 </label>
                 <label>County
-                    <input type="text" ng-model="countyQuery" />
+                    <input type="text" ng-model="countyQuery" id="county"/>
                 </label>
                 <label>Zip
-                    <input type="text" ng-model="zipQuery" />
+                    <input type="text" ng-model="zipQuery" id="zip"/>
                 </label>
                 <label>Organization Type
                     <select ng-model="orgQuery">
                         <option value="">--Please Select Org. Type--</option>
-                        <option ng-repeat="type in resp.optList" value="{{type}}">{{type}}</option>
+                        <option ng-repeat="type in resp.orgTypes" value="{{type.type}}">{{type.type}}</option>
                     </select>
                 </label>
             </form>
@@ -93,7 +96,7 @@
                 <th><em class="sortable" ng-click="sortBy = 'zip'; sortRev = !sortRev;">Zip</em></th>
                 <th><em class="sortable" ng-click="sortBy = 'county'; sortRev = !sortRev;">County</em></th>
             </tr>
-            <tr ng-repeat="org in resp.orgsList | filter:{name:nameQuery, county:countyQuery, zip:zipQuery, type:orgQuery} | orderBy: sortBy:sortRev"
+            <tr ng-repeat="org in resp.orgsList | filter:{name:nameQuery, city:citySelect, county:countyQuery, zip:zipQuery, type:orgQuery} | orderBy: sortBy:sortRev"
                 id="{{org.orgId}}" ng-click="resp.getTabs(org.orgId)" class="orgRow">
 
                     <td>{{org.type}}</td>
@@ -122,22 +125,95 @@
 
             <div ng-show="resp.tab == 'Locations'">
                 <div id="loc-left">
-                    <label>Choose Location:
-                        <select  ng-model="locQuery" ng-change="resp.setMap(0,0,locQuery)">
-                            <option ng-repeat="loc in resp.locInfo" value="{{loc.site}}">{{loc.type}}</option>
-                        </select>
-                    </label>
+                    <select  ng-model="locQuery" ng-change="resp.setMap(0,0,locQuery)">
+                        <option value="">--Select Location--</option>
+                        <option ng-repeat="loc in resp.locInfo" value="{{loc.site}}">{{loc.type}}</option>
+                    </select>
                     <input ng-repeat-start="loc in resp.locInfo" type="hidden" id="hidLat" ng-model="lat" value="{{loc.lat}}" />
                     <input type="hidden" ng-model="lon" value="{{loc.long}}" id="hidLon"/>
                     <table ng-repeat-end ng-hide="loc.site != locQuery">
                         <tbody>
-                            <tr ng-repeat="(key, val) in loc" ng-hide="val == null || val == 'null' || val == ''"><td><strong>{{key}}</strong></td><td>{{val}}</td></tr>
+                            <tr ng-repeat="(key, val) in loc" ng-hide="val == null || val == 'null' || val == '' || val == 'NaN'"><td><strong>{{key}}</strong></td><td>{{val}}</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <div id="map"></div>
             </div>
 
+            <div ng-show="resp.tab == 'Treatments'">
+                <table ng-show="resp.count != 0">
+                    <thead>
+                        <tr><th>Type</th><th>Abbreviation</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="treat in resp.tInfo"><td>{{treat.type}}</td><td>{{treat.abb}}</td></tr>
+                    </tbody>
+                </table>
+                <p ng-show="resp.count == 0">There are no treatments available</p>
+            </div>
+
+            <div ng-show="resp.tab == 'Training'">
+                <table ng-show="resp.count != 0">
+                    <thead>
+                        <tr><th>Type</th><th>Abbreviation</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="treat in resp.tInfo"><td>{{treat.type}}</td><td>{{treat.abb}}</td></tr>
+                    </tbody>
+                </table>
+                <p ng-show="resp.count == 0">There is no training available</p>
+            </div>
+
+            <div ng-show="resp.tab == 'Facilities'">
+                <table ng-show="resp.count != 0">
+                    <thead>
+                        <tr><th>Type</th><th>Quantity</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="fac in resp.facInfo"><td>{{fac.type}}</td><td>{{fac.qty}}</td><td>{{fac.desc}}</td></tr>
+                    </tbody>
+                </table>
+                <p ng-show="resp.count == 0">There are no facilities available</p>
+            </div>
+
+            <div ng-show="resp.tab == 'Physicians'">
+                <table ng-show="resp.count != 0">
+                    <thead>
+                        <tr><th>Physician</th><th>License Num.</th><th>Contact Phone</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="phy in resp.phyInfo"><td>{{phy.name}}</td><td>{{phy.license}}</td><td>{{phy.phone}}</td></tr>
+                    </tbody>
+                </table>
+                <p ng-show="resp.count == 0">There physicians</p>
+            </div>
+
+            <div ng-show="resp.tab == 'People'">
+                    <select ng-model="location">
+                        <option value="">--Select Location--</option>
+                        <option ng-repeat="loc in resp.locals" value="{{loc.id}}">{{loc.type}} -- {{loc.add}}</option>
+                    </select>
+                <table >
+                    <thead>
+                         <tr><th>Name</th><th>Role</th></tr>
+                    </thead>
+                    <tbody ng-repeat="people in resp.pInfo">
+                        <tr ng-repeat="person in people" ng-hide="person.loc != location"><td>{{person.name}}</td><td>{{person.role}}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div ng-show="resp.tab == 'Equipment'">
+                <table ng-show="resp.count != 0">
+                    <thead>
+                    <tr><th>Type</th><th>Quantity</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="eq in resp.equip"><td>{{eq.type}}</td><td>{{eq.qty}}</td><td ng-hide="eq.desc != null || eq.desc == 'null' || eq.des == '' ">{{eq.desc}}</td></tr>
+                    </tbody>
+                </table>
+                <p ng-show="resp.count == 0">There is no equipment available</p>
+            </div>
         </div>
     </div>
 </section>
@@ -145,6 +221,8 @@
 <script src="js/vendor/jquery.min.js"></script>
 <script src="js/vendor/jquery.modal.min.js"></script> <!--jquery modal plugin-->
 <script src="js/vendor/jquery.easytabs.min.js"></script> <!--jquery tabs plugin-->
+<script src="js/vendor/jquery.auto-complete.min.js"></script> <!--jquery auto complete plugin-->
+<script src="js/jquery-alex-plugin.js"></script>
 <!--<script src="js/vendor/what-input.min.js"></script>
 <script src="js/foundation.min.js"></script>-->
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>

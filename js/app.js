@@ -8,18 +8,28 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         "KS","KY","LA","MA","MD","ME","MH","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY",
         "OH","OK","OR","PA","PR","PW","RI","SC","SD","TN","TX","UT","VA","VI","VT","WA","WI","WV","WY"];
 
+    self.orgsList = [];
+    self.orgTypes = [];
     self.state = "NY";
     self.cities = [];
-    self.orgsList = [];
     self.optList = [];
     self.tabs = [];
     self.orgId = "";
     self.tabInfo = {};
     self.tab = "General";
     self.locInfo = [];
-    self.lat;
-    self.long;
-    self.map;
+    //self.lat;
+    //self.long;
+    //self.map;
+    self.tInfo = [];
+    //self.count;
+    self.trainInfo = [];
+    self.facInfo = [];
+    self.phyInfo = [];
+    self.pInfo = [];
+    self.equip = [];
+    //self.sCount;
+    //self.pCount;
     //self.numCities = 0;
 
     self.getCities = function (state) {
@@ -45,14 +55,36 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         });
     };
 
-    self.getOrgs = function() {
+    self.getOrgTypes = function() {
+        self.orgTypes = [];
+        $http.get( url, {
+            method: "GET",
+            params: {path: "/OrgTypes"},
+            responseType: "document"
+        }).success(function (data) {
+            $("row", data).each(function(){
+                self.orgTypes.push({
+                    id: $("typeId", this).text(),
+                    type: $("type", this).text()
+                });
+            });
+        });
+    };
+
+    self.getOrgs = function(bool) {
         var state = $("#state");
         if(!state.val()) {
             state.val("NY");
         }
+        if(bool) {
+            var ext = "/Organizations?type=Physician&" + $("#searchForm").serialize();
+        }
+        else {
+            var ext = "/Organizations?" + $("#searchForm").serialize();
+        }
         $http.get( url, {
             method: "GET",
-            params: {path: "/Organizations?" + $("#searchForm").serialize()},
+            params: {path: ext},
             responseType: "document"
         }).success(function (data) {
             if ($(data).find("error").length !== 0) {
@@ -76,7 +108,41 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                         zip : $("zip", this).text()
                     });
                 });
-                $("#adv_search, #results_disp").show();
+                $("#name").autoComplete({
+                    minChars: 1,
+                    source: function(term, sug) {
+                        term = term.toLowerCase();
+                        var suggestions = [];
+                        for(var i = 0; i < self.orgsList.length; i++) {
+                            if (~self.orgsList[i].name.toLowerCase().indexOf(term)) suggestions.push(self.orgsList[i].name);
+                        }
+                        sug(suggestions);
+                    }
+                });
+                $("#zip").autoComplete({
+                    minChars: 1,
+                    source: function(term, sug) {
+                        term = term.toLowerCase();
+                        var suggestions = [];
+                        for(var i = 0; i < self.orgsList.length; i++) {
+                            if (~self.orgsList[i].zip.toLowerCase().indexOf(term)) suggestions.push(self.orgsList[i].zip);
+                        }
+                        sug(suggestions);
+                    }
+                });
+                $("#county").autoComplete({
+                    minChars: 1,
+                    source: function(term, sug) {
+                        term = term.toLowerCase();
+                        var suggestions = [];
+                        for(var i = 0; i < self.orgsList.length; i++) {
+                            if (~self.orgsList[i].county.toLowerCase().indexOf(term)) suggestions.push(self.orgsList[i].county);
+                        }
+                        sug(suggestions);
+                    }
+                });
+                //$("#adv_search, #results_disp").show();
+                $("#searcher").moveElements("displayData", ["adv_search", "results_disp"]);
             }
         });
     };
@@ -89,6 +155,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             params: {path: "/Application/Tabs?orgId=" + id},
             responseType: "document"
         }).success(function(data) {
+            self.getTabInfo(self.tab);
             self.tabs = [];
             $("row", data).each(function() {
                 self.tabs.push($("Tab", this).text());
@@ -103,7 +170,9 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     };
 
     self.getTabInfo = function (tab) {
-        console.log(tab);
+        if(tab === 'Treatment') {
+            tab += "s";
+        }
         self.tab = tab;
         self.tabInfo = {};
         $http.get(url, {
@@ -137,8 +206,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             }
             else if(tab === 'Locations') {
                 self.locInfo = [];
-                var locals = $("location", data);
-                $.each(locals, function(i){
+                $.each($("location", data), function(i){
                     var la = parseFloat($("latitude", this).text()),
                         lo = parseFloat($("longitude", this).text());
                     if(i == 0) {
@@ -158,6 +226,86 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                         site: $("siteId", this).text()
                     });
                 });
+            }
+            else if(tab === 'Treatments' || tab === "Training") {
+                self.tInfo = [];
+                self.count = parseInt($("count", data).text());
+                if (self.count > 0) {
+                    if(tab === 'Treatments'){
+                        var sel = 'treatment'
+                    }
+                    else {
+                        var sel = 'training';
+                    }
+                    $(sel, data).each(function(){
+                        self.tInfo.push({
+                            type: $("type", this).text(),
+                            abb: $("abbreviation", this).text()
+                        });
+                    });
+                }
+            }
+            else if(tab === 'Facilities') {
+                self.facInfo = [];
+                self.count = parseInt($("count", data).text());
+                if (self.count > 0) {
+                    $("facility", data).each(function(){
+                        self.facInfo.push({
+                            type: $("type", this).text(),
+                            qty: $("quantity", this).text(),
+                            desc: $("description", this).text()
+                        });
+                    });
+                }
+            }
+            else if(tab === 'Physicians') {
+                self.phyInfo = [];
+                self.count = parseInt($("count", data).text());
+                if (self.count > 0) {
+                    $("physician", data).each(function(){
+                        self.phyInfo.push({
+                            name: $("fName", this).text() + " " + $("mName", this).text() + " " + $("lName", this).text(),
+                            license: $("license", this).text(),
+                            phone: $("phone", this).text()
+                        });
+                    });
+                }
+            }
+            else if(tab === 'People') {
+                self.pInfo = [];
+                self.locals = [];
+                $("site", data).each(function(){
+                    var people = [];
+                    var siteId = $(this).attr("siteId");
+                    var local = {
+                        id: siteId,
+                        add: $(this).attr("address"),
+                        type: $(this).attr("siteType")
+                    };
+                    $("person", this).each(function(){
+                        people.push({
+                            name: $("honorific", this).text() + " " + $("fName", this).text() + " " + $("mName", this).text()
+                                + " " + $("lName", this).text(),
+                            role: $("role", this).text(),
+                            loc: siteId
+                        })
+                    });
+                    self.locals.push(local);
+                    self.pInfo.push(people);
+                });
+            }
+            else if(tab === 'Equipment') {
+                self.equip =[];
+                self.count = parseInt($("count", data).text());
+                if(self.count > 0) {
+                    $("equipment", data).each(function(){
+                        self.equip.push({
+                            type: $("type", this).text(),
+                            qty: $("quantity", this).text(),
+                            desc: $("description", this).text()
+                        });
+                    });
+                }
             }
         });
     };
@@ -183,12 +331,12 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     };
 
     self.getCities();
-
+    self.getOrgTypes();
     //return self;
 }]);
 
 myApp.utils = (function() {
     var me = {};
-
+    $("#searcher").moveElements();
 }());
 

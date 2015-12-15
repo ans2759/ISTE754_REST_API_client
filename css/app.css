@@ -1,0 +1,82 @@
+.top-bar, .top-bar ul {
+    background-color: #f1f1f1;
+}
+#state_label {
+    width:33%;
+}
+#filter {
+    display: none;
+}
+#results_disp {
+    display: none;
+    margin-top: 10px;
+}
+#tabs_modal {
+    display: none;
+}
+.orgRow {
+    cursor: pointer;
+}
+.sortable {
+    cursor:pointer;
+    text-decoration: underline;;
+}
+.modal {
+    position: absolute;
+    width: 65%;
+    left: 25%;
+    top: 25%;
+    max-width: 700px;
+    border: 5px solid #777;
+}
+#loc-left {
+    float:left;
+    width:50%;
+}
+#map {
+    height:450PX;
+    margin: 3px;
+    background-color: #eee;
+}
+#filter, #searcher {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 25px;
+    margin: 10px;
+    border: 5px solid #777;
+}
+#phySearch, #orgSearch {
+    border-radius: 25px;
+}
+label, h5 {
+    color: #333;
+    font-size: 1.5em;
+    font-weight: bolder;
+}
+select {
+    background-color: #bbb;
+}
+input {
+    background-color: #bbb;
+}
+::-webkit-input-placeholder {
+    color: white;
+}
+
+:-moz-placeholder { /* Firefox 18- */
+    color: white;
+}
+
+::-moz-placeholder {  /* Firefox 19+ */
+    color: white;
+}
+
+:-ms-input-placeholder {
+    color: white;
+}
+.color_white {
+    color: white;
+}
+table {
+    border: 5px solid #777;
+}

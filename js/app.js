@@ -18,20 +18,21 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     self.tabInfo = {};
     self.tab = "General";
     self.locInfo = [];
-    //self.lat;
-    //self.long;
-    //self.map;
     self.tInfo = [];
-    //self.count;
     self.trainInfo = [];
     self.facInfo = [];
     self.phyInfo = [];
     self.pInfo = [];
     self.equip = [];
-    //self.sCount;
-    //self.pCount;
-    //self.numCities = 0;
 
+    /**
+     * getCities
+     *
+     * @param state
+     *
+     * populates an array representing the cities in that state
+     * if state is not specified, it defaults to NY
+     */
     self.getCities = function (state) {
         self.state = state || "NY";
 
@@ -55,6 +56,11 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         });
     };
 
+    /**
+     * getOrgTypes
+     *
+     * populates the select box that is used to filter organizations by type
+     */
     self.getOrgTypes = function() {
         self.orgTypes = [];
         $http.get( url, {
@@ -71,6 +77,14 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         });
     };
 
+    /**
+     * getOrgs
+     *
+     * @param bool
+     *
+     * populates the results display with the organizations that meet the search criteria
+     * If true is passed in, the function will search for physicians instead of organizations
+     */
     self.getOrgs = function(bool) {
         var state = $("#state");
         if(!state.val()) {
@@ -108,6 +122,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                         zip : $("zip", this).text()
                     });
                 });
+                //initializa jquery auto-complete plugin for use in filtering results
                 $("#name").autoComplete({
                     minChars: 1,
                     source: function(term, sug) {
@@ -119,6 +134,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                         sug(suggestions);
                     }
                 });
+                //auto-complete for zip codes
                 $("#zip").autoComplete({
                     minChars: 1,
                     source: function(term, sug) {
@@ -130,6 +146,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                         sug(suggestions);
                     }
                 });
+                //auto-complete for counties
                 $("#county").autoComplete({
                     minChars: 1,
                     source: function(term, sug) {
@@ -141,12 +158,19 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                         sug(suggestions);
                     }
                 });
-                //$("#adv_search, #results_disp").show();
+                //custom plugin, move elements when we have received ajax response
                 $("#searcher").moveElements("displayData", ["adv_search", "results_disp"]);
             }
         });
     };
 
+    /**
+     * getTabs
+     *
+     * @param id
+     *
+     * populates an array representing the tabs related to an organization
+     */
     self.getTabs = function (id) {
         self.tab = "General";
         self.orgId = id;
@@ -160,6 +184,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             $("row", data).each(function() {
                 self.tabs.push($("Tab", this).text());
             });
+            //open modal with tabs related to clicked on organization
             $("#tabs_modal").modal().load(function(){
                 $("#tabs_modal").easytabs({
                     defaultTab: "li:first-child"
@@ -169,7 +194,15 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         });
     };
 
+    /**
+     * getTabInfo
+     *
+     * @param tab
+     *
+     * gets tabular info for selected organization
+     */
     self.getTabInfo = function (tab) {
+        //for some reason this is returned as 'Treatment', but needs to be passed in as 'Treatments'
         if(tab === 'Treatment') {
             tab += "s";
         }
@@ -180,6 +213,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             params: {path: "/" + self.orgId + "/" + tab},
             responseType: "document"
         }).success(function(data){
+            //handle data based upon which tab was clicked on
             if(tab === 'General') {
                 var n = $("name", data).text(),
                     e = $("email", data).text(),
@@ -207,8 +241,10 @@ myApp.controller("ResponseController", ['$http', function ($http) {
             else if(tab === 'Locations') {
                 self.locInfo = [];
                 $.each($("location", data), function(i){
+                    //get lat and lon from result
                     var la = parseFloat($("latitude", this).text()),
                         lo = parseFloat($("longitude", this).text());
+                    //initialize map to first location
                     if(i == 0) {
                         self.setMap(la,lo);
                     }
@@ -227,6 +263,7 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                     });
                 });
             }
+            //these tabs are very similar data, so they can be handled the same way
             else if(tab === 'Treatments' || tab === "Training") {
                 self.tInfo = [];
                 self.count = parseInt($("count", data).text());
@@ -310,18 +347,28 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         });
     };
 
+    /**
+     * setMap
+     *
+     * @param la - latitude
+     * @param lo - longitude
+     * @param site - selected site for the organization
+     *
+     * utility function used to center the map at specified lat and lon
+     * If site is specified, lat and lon will be determined by a different site in the list of sites for that organization
+     */
     self.setMap = function(la, lo, site){
         self.lat = la;
         self.long = lo;
         if(site) {
+            //sites are not zero indexed
             self.lat = self.locInfo[site-1].lat;
             self.long = self.locInfo[site-1].long;
         }
         if((self.lat != "" && self.lat != null && self.lat != 'null') && (self.long != "" && self.long != null && self.long != 'null')) {
-            //console.log(self.map);
             if(self.map) {
+                //map has already been initialized, so just update center
                 self.map.setCenter({lat: self.lat, lng: self.long});
-
             }
             self.map = new google.maps.Map(document.getElementById('map'), {
                 center: {lat: self.lat, lng: self.long},
@@ -330,13 +377,23 @@ myApp.controller("ResponseController", ['$http', function ($http) {
         }
     };
 
+    //run these methods on page load
     self.getCities();
     self.getOrgTypes();
-    //return self;
+    $("#searcher").moveElements();
+    $(".tb1").live("click", function(){
+        $(this).toggleClass("active");
+    });
+    document.body.addEventListener("click", function(e) {
+       /* console.dir(e.target.parentNode.classList);
+       if(e.target.nodeName === "A"  && e.target.parentNode.classList.contains("tab") > -1) {
+           e.target.classList.add("active");
+           console.log("cli");
+       }*/
+
+
+    });
 }]);
 
-myApp.utils = (function() {
-    var me = {};
-    $("#searcher").moveElements();
-}());
+
 

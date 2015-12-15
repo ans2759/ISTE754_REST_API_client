@@ -27,46 +27,56 @@
         }
         .sortable {
             cursor:pointer;
+            text-decoration: underline;;
         }
         .modal {
             position: absolute;
-            width: 35%;
+            width: 65%;
             left: 25%;
             top: 25%;
+            max-width: 700px;
         }
         #loc-left {
             float:left;
-            width:33%;
+            width:50%;
+            background-color: #eee;
         }
         #map {
             height:450PX;
+            margin: 3px;
+            background-color: #eee;
         }
     </style>
 
 </head>
+<!--init controller-->
 <body ng-controller="ResponseController as resp">
 <section >
     <div class="row" >
         <div class="medium-3 columns" id="searcher">
             <form id="searchForm">
-            <label id="state_label">State
-                <select name="state" id="state" ng-model="resp.stateSelect" ng-change="resp.getCities(resp.stateSelect)">
-                    <option value="" selected="selected">NY</option>
-                    <option ng-repeat="state in resp.states" value="{{state}}">{{state}}</option>
-                </select>
-            </label>
-            <label>City
-                <select name="town" id="town" ng-model="citySelect" >
-                    <option value="">--Please Select A City--</option>
-                    <option ng-repeat="city in resp.cities" value="{{city}}">{{city}}</option>
-                </select>
-            </label>
+                <!--displays list of states-->
+                <label id="state_label">State
+                    <select name="state" id="state" ng-model="resp.stateSelect" ng-change="resp.getCities(resp.stateSelect)">
+                        <option value="" selected="selected">NY</option>
+                        <option ng-repeat="state in resp.states" value="{{state}}">{{state}}</option>
+                    </select>
+                </label>
+                <!--displays all of the cities for specified state-->
+                <label>City
+                    <select name="town" id="town" ng-model="citySelect" >
+                        <option value="">--Please Select A City--</option>
+                        <option ng-repeat="city in resp.cities" value="{{city}}">{{city}}</option>
+                    </select>
+                </label>
             </form>
+            <!--buttons control search for either phsyicians or organizations-->
             <a ng-model="phySearch" id="phySearch" ng-click="resp.getOrgs(true)" class="secondary button" href="#">Search For Physicians</a>
             <a ng-model="orgSearch" id="orgSearch" ng-click="resp.getOrgs(false)" class="secondary button" href="#">Search For Organizations</a>
         </div>
-        <div class="medium-3 columns">
+        <div class="medium-3 columns end">
             <form id="adv_search">
+                <h5>Filter Results:</h5>
                 <label>Organization Name
                     <input type="text" name="name" id="name" ng-model="nameQuery"/>
                 </label>
@@ -76,6 +86,7 @@
                 <label>Zip
                     <input type="text" ng-model="zipQuery" id="zip"/>
                 </label>
+                <!--dynamically generated list of organization types-->
                 <label>Organization Type
                     <select ng-model="orgQuery">
                         <option value="">--Please Select Org. Type--</option>
@@ -86,9 +97,11 @@
         </div>
     </div>
 
+    <!-- div for displaying results-->
     <div id="results_disp" class="row">
         <table>
             <tr>
+                <!--tables headers, clicking sorts table by that column-->
                 <th><em class="sortable" ng-click="sortBy = 'type'; sortRev = !sortRev;">Type</em></th>
                 <th><em class="sortable" ng-click="sortBy = 'name'; sortRev = !sortRev;">Name</em></th>
                 <th>City</th>
@@ -96,6 +109,7 @@
                 <th><em class="sortable" ng-click="sortBy = 'zip'; sortRev = !sortRev;">Zip</em></th>
                 <th><em class="sortable" ng-click="sortBy = 'county'; sortRev = !sortRev;">County</em></th>
             </tr>
+            <!--displays sortable list of orgs that match query and filter results-->
             <tr ng-repeat="org in resp.orgsList | filter:{name:nameQuery, city:citySelect, county:countyQuery, zip:zipQuery, type:orgQuery} | orderBy: sortBy:sortRev"
                 id="{{org.orgId}}" ng-click="resp.getTabs(org.orgId)" class="orgRow">
 
@@ -108,14 +122,16 @@
             </tr>
         </table>
     </div>
+    <!--modal used to display tabular info for orgs
+        display is determined by the tab that is clicked on-->
     <div id="tabs_modal" class="tab-container" >
         <ul class="etabs">
-            <li ng-repeat="tab in resp.tabs" class="tab"><a href="#tabs-1" ng-click="resp.getTabInfo(tab)">{{tab}}</a></li>
+            <li ng-repeat="tab in resp.tabs" class="tab tb1"><a href="#tabs-1" ng-click="resp.getTabInfo(tab)">{{tab}}</a></li>
         </ul>
 
         <div id="tabs-1">
+            <!-- General tab-->
             <div ng-show="resp.tab == 'General'">
-               <!-- <p ng-model="orgName"><bold>Description:</bold> {{resp.tabInfo.description}}</p>-->
                 <table>
                     <tbody>
                         <tr ng-repeat="(key, val) in resp.tabInfo"><td><strong>{{key}}: </strong></td><td>{{val}}</td></tr>
@@ -123,6 +139,7 @@
                 </table>
             </div>
 
+            <!-- Locations Tab-->
             <div ng-show="resp.tab == 'Locations'">
                 <div id="loc-left">
                     <select  ng-model="locQuery" ng-change="resp.setMap(0,0,locQuery)">
@@ -140,6 +157,7 @@
                 <div id="map"></div>
             </div>
 
+           <!-- Treatments Tab-->
             <div ng-show="resp.tab == 'Treatments'">
                 <table ng-show="resp.count != 0">
                     <thead>
@@ -164,6 +182,7 @@
                 <p ng-show="resp.count == 0">There is no training available</p>
             </div>
 
+            <!-- Facilities Tab-->
             <div ng-show="resp.tab == 'Facilities'">
                 <table ng-show="resp.count != 0">
                     <thead>
@@ -176,6 +195,7 @@
                 <p ng-show="resp.count == 0">There are no facilities available</p>
             </div>
 
+            <!--Physicians Tab-->
             <div ng-show="resp.tab == 'Physicians'">
                 <table ng-show="resp.count != 0">
                     <thead>
@@ -188,6 +208,7 @@
                 <p ng-show="resp.count == 0">There physicians</p>
             </div>
 
+            <!--People Tab-->
             <div ng-show="resp.tab == 'People'">
                     <select ng-model="location">
                         <option value="">--Select Location--</option>
@@ -203,6 +224,7 @@
                 </table>
             </div>
 
+            <!--Equipment Tab-->
             <div ng-show="resp.tab == 'Equipment'">
                 <table ng-show="resp.count != 0">
                     <thead>

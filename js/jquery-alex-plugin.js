@@ -17,15 +17,24 @@
         // plugin's default options
         var defaults = {
 
-            margin: 33,
-            top: 200
+            classes: ["medium-3", "columns"],
+            widthFrom: "30%",
+            widthTo: "25%",
+            marginFrom: "7%",
+            marginTo: 0
 
         }
 
         // this will hold the merged default and user-provided properties
         // you will have to access the plugin's properties through this object!
         // settings.propertyName
-        var settings = {}
+        var settings = {
+            /*classes: method.classes,
+            widthFrom: method.widthFrom,
+            widthTo: method.widthTo,
+            marginFrom: method.merginFrom,
+            marginTo: method.marginTo*/
+        }
 
         // public methods
         // to keep the $.fn namespace uncluttered, collect all of the plugin's methods in an object literal and call
@@ -55,11 +64,15 @@
                     var
                         $element = $(this), // reference the jQuery version of the current DOM element
                         element = this; // reference to the actual DOM element
+                    helpers.toggleC($element);
+
                     $element
-                        .toggleClass("medium-3")
+                        /*.toggleClass("medium-3")
                         .toggleClass("columns")
                         .css("width", "30%")
-                        .css("margin", "15% auto");
+                        .css("margin", "15% auto");*/
+                        .css("width", settings.widthFrom)
+                        .css("margin", settings.marginFrom + " auto");
 
 
                     // code goes here
@@ -67,20 +80,24 @@
                 });
 
             },
-
-            // a public method. for demonstration purposes only - remove it!
-            displayData: function(ids) {
+            //public methods
+            displayData: function(data) {
                 // code goes here
+                var ids = data[0],
+                    cls = data[1],
+                    opts = data[2];
+
                 var len = ids.length;
                 for(var i = 0; i < len; i++) {
                     document.getElementById(ids[i]).style.display = "block";
                 }
                 //move searcher back to original spot
+                for(var i = 0; i < cls.length; i++) {
+                    $(this).addClass(cls[i]);
+                }
                 $(this)
-                    .addClass("medium-3")
-                    .addClass("columns")
-                    .css("width", "25%")
-                    .css("margin", 0);
+                    .css("width", opts[0])
+                    .css("margin", opts[1]);
             }
 
         }
@@ -99,6 +116,11 @@
 
                 // code goes here
 
+            },
+            toggleC: function($e) {
+                for(var i = 0; i < settings.classes.length; i++) {
+                    $e.toggleClass(settings.classes[i]);
+                }
             }
 
         }

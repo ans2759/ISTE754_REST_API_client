@@ -159,7 +159,11 @@ myApp.controller("ResponseController", ['$http', function ($http) {
                     }
                 });
                 //custom plugin, move elements when we have received ajax response
-                $("#searcher").moveElements("displayData", ["adv_search", "results_disp"]);
+                $("#searcher").moveElements("displayData", [
+                    ["filter", "results_disp"],
+                    ["medium-3","columns"],
+                    ["25%", "10px"]
+                ]);
             }
         });
     };
@@ -380,16 +384,19 @@ myApp.controller("ResponseController", ['$http', function ($http) {
     //run these methods on page load
     self.getCities();
     self.getOrgTypes();
-    $("#searcher").moveElements();
-    $(".tb1").live("click", function(){
-        $(this).toggleClass("active");
+    $("#searcher").moveElements({
+        classes: ["medium-3", "columns"]
     });
-    document.body.addEventListener("click", function(e) {
-       /* console.dir(e.target.parentNode.classList);
-       if(e.target.nodeName === "A"  && e.target.parentNode.classList.contains("tab") > -1) {
+    //maintains active tab
+    var activeTab = "";
+    document.getElementById("tabs_modal").addEventListener("click", function(e) {
+       if(e.target.nodeName === "A"  && e.target.parentNode.classList.contains("tb1") > -1) {
+           if(activeTab != "") {
+               activeTab.classList.remove("active");
+           }
+           activeTab = e.target;
            e.target.classList.add("active");
-           console.log("cli");
-       }*/
+       }
 
 
     });
